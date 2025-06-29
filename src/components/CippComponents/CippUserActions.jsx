@@ -20,6 +20,7 @@ import {
   PhonelinkSetup,
   Shortcut,
 } from "@mui/icons-material";
+import { getCippLicenseTranslation } from "../../utils/get-cipp-license-translation";
 import { useSettings } from "/src/hooks/use-settings.js";
 
 export const CippUserActions = () => {
@@ -52,12 +53,30 @@ export const CippUserActions = () => {
     },
     {
       //tested
-
       label: "Create Temporary Access Password",
       type: "POST",
       icon: <Password />,
       url: "/api/ExecCreateTAP",
       data: { ID: "userPrincipalName" },
+      fields: [
+        {
+          type: "number",
+          name: "lifetimeInMinutes",
+          label: "Lifetime (Minutes)",
+          placeholder: "Leave blank for default",
+        },
+        {
+          type: "switch",
+          name: "isUsableOnce",
+          label: "One-time use only",
+        },
+        {
+          type: "datePicker",
+          name: "startDateTime",
+          label: "Start Date/Time (leave blank for immediate)",
+          dateTimeType: "datetime",
+        },
+      ],
       confirmText: "Are you sure you want to create a Temporary Access Password?",
       multiPost: false,
     },
@@ -167,7 +186,33 @@ export const CippUserActions = () => {
       type: "POST",
       icon: <GroupAdd />,
       url: "/api/EditGroup",
-      data: { addMember: "userPrincipalName" },
+      customDataformatter: (row, action, formData) => {
+        let addMember = [];
+        if (Array.isArray(row)) {
+          row
+            .map((r) => ({
+              label: r.displayName,
+              value: r.userPrincipalName,
+              addedFields: {
+                id: r.id,
+              },
+            }))
+            .forEach((r) => addMember.push(r));
+        } else {
+          addMember.push({
+            label: row.displayName,
+            value: row.userPrincipalName,
+            addedFields: {
+              id: row.id,
+            },
+          });
+        }
+        return {
+          addMember: addMember,
+          tenantFilter: tenant,
+          groupId: formData.groupId,
+        };
+      },
       fields: [
         {
           type: "autoComplete",
@@ -184,10 +229,54 @@ export const CippUserActions = () => {
               groupName: "displayName",
             },
             queryKey: `groups-${tenant}`,
+            showRefresh: true,
           },
         },
       ],
       confirmText: "Are you sure you want to add the user to this group?",
+      multiPost: true,
+    },
+    {
+      label: "Manage Licenses",
+      type: "POST",
+      url: "/api/ExecBulkLicense",
+      icon: <CloudDone />,
+      data: { userIds: "id" },
+      multiPost: true,
+      fields: [
+        {
+          type: "radio",
+          name: "LicenseOperation",
+          label: "License Operation",
+          options: [
+            { label: "Add Licenses", value: "Add" },
+            { label: "Remove Licenses", value: "Remove" },
+            { label: "Replace Licenses", value: "Replace" },
+          ],
+          required: true,
+        },
+        {
+          type: "switch",
+          name: "RemoveAllLicenses",
+          label: "Remove All Existing Licenses",
+        },
+        {
+          type: "autoComplete",
+          name: "Licenses",
+          label: "Select Licenses",
+          multiple: true,
+          creatable: false,
+          api: {
+            url: "/api/ListLicenses",
+            labelField: (option) =>
+              `${getCippLicenseTranslation([option])} (${option?.availableUnits} available)`,
+            valueField: "skuId",
+            queryKey: `licenses-${tenant}`,
+          },
+        },
+      ],
+      confirmText: "Are you sure you want to manage licenses for the selected users?",
+      multiPost: true,
     },
     {
       label: "Disable Email Forwarding",
@@ -226,7 +315,7 @@ export const CippUserActions = () => {
           name: "siteUrl",
           label: "Select a Site",
           multiple: false,
-          creatable: false,
+          creatable: true,
           api: {
             url: "/api/ListSites",
             data: { type: "SharePointSiteUsage", URLOnly: true },

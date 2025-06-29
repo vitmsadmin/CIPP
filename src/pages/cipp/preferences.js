@@ -216,7 +216,7 @@ const Page = () => {
                           value: (
                             <CippFormComponent
                               type="switch"
-                              name="offboardingDefaults.keepCopy"
+                              name="offboardingDefaults.KeepCopy"
                               formControl={formcontrol}
                             />
                           ),
@@ -257,6 +257,16 @@ const Page = () => {
                             <CippFormComponent
                               type="switch"
                               name="offboardingDefaults.RemoveMFADevices"
+                              formControl={formcontrol}
+                            />
+                          ),
+                        },
+                        {
+                          label: "Clear Immutable ID",
+                          value: (
+                            <CippFormComponent
+                              type="switch"
+                              name="offboardingDefaults.ClearImmutableId"
                               formControl={formcontrol}
                             />
                           ),
