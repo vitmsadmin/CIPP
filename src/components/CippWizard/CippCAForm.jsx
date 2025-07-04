@@ -1,5 +1,4 @@
 import { Stack } from "@mui/material";
-import { Grid } from "@mui/system";
 import { CippWizardStepButtons } from "./CippWizardStepButtons";
 import CippJsonView from "../CippFormPages/CippJSONView";
 import CippFormComponent from "../CippComponents/CippFormComponent";
@@ -10,7 +9,7 @@ import { useWatch } from "react-hook-form";
 export const CippCAForm = (props) => {
   const { formControl, onPreviousStep, onNextStep, currentStep } = props;
   const values = formControl.getValues();
-  const CATemplates = ApiGetCall({ url: "/api/ListCATemplates" });
+  const CATemplates = ApiGetCall({ url: "/api/ListCATemplates", queryKey: "CATemplates" });
   const [JSONData, setJSONData] = useState();
   const watcher = useWatch({ control: formControl.control, name: "TemplateList" });
   useEffect(() => {
