@@ -1,6 +1,6 @@
 name: CIPP Development Frontend CI/CD
 
-on:
+only:
   push:
     branches:
       - main
