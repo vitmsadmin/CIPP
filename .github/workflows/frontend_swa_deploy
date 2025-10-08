@@ -1,0 +1,57 @@
+name: CIPP Frontend CI/CD
+
+on:
+  push:
+    branches: [ main ]     # <-- change to [ dev ] if your SWA uses 'dev'
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          if [ -f yarn.lock ]; then
+            corepack enable || true
+            yarn install --frozen-lockfile
+          else
+            npm ci
+          fi
+
+      - name: Build (export to ./out)
+        run: |
+          if [ -f yarn.lock ]; then
+            yarn build
+          else
+            npm run build
+          fi
+
+      # Ensure the static web app routes file is included in the upload
+      - name: Ensure staticwebapp.config.json is included
+        run: |
+          if [ -f staticwebapp.config.json ]; then
+            cp staticwebapp.config.json out/ || true
+          fi
+
+      - name: Verify build output
+        run: |
+          echo "Expecting ./out to exist..."
+          ls -la out || (echo "::error::Missing 'out' folder. Make sure the build script performs a static export to 'out'." && exit 1)
+
+      # Upload the already-built ./out to SWA (no build inside the action)
+      - name: Deploy to Azure SWA
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_LIVELY_FIELD_0A9978E10 }}
+          action: upload
+          app_location: "out"
+          skip_app_build: true
