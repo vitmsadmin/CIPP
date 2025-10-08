@@ -1,6 +1,6 @@
 name: CIPP Frontend Build
 
-on:
+only:
   push:
     branches:
       - main
