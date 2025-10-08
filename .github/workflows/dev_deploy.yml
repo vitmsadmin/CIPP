@@ -1,9 +1,6 @@
 name: CIPP Development Frontend CI/CD
 
-only:
-  push:
-    branches:
-      - main
+on:
   workflow_dispatch:
 
 jobs:
